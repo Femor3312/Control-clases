@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Clases A2 / B1</title>
+    <style>
+        :root {
+            --bg-color: #ECEFF1;
+            --card-bg: #FFFFFF;
+            --completed-color: #78909C;
+            --text-color: #263238;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 15px;
+            color: var(--text-color);
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Resumen */
+        .summary-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .summary-title {
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            color: #37474F;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .metric-box {
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .metric-teoria { background: #E3F2FD; color: #1565C0; }
+        .metric-taller { background: #FFEBEE; color: #C62828; }
+        .metric-faltantes { background: #FFF3E0; color: #E65100; }
+
+        /* Categorías Grid */
+        .categories-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .categories-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .category-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-top: 5px solid #ccc;
+        }
+
+        .category-title {
+            font-size: 1em;
+            font-weight: bold;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        /* Sección Talleres horizontal */
+        .talleres-section {
+            grid-column: 1 / -1;
+        }
+
+        .talleres-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .talleres-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Botones de clases */
+        .class-btn {
+            border: none;
+            border-radius: 6px;
+            color: white;
+            padding: 12px 8px;
+            font-size: 0.85em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .class-btn:active {
+            transform: scale(0.98);
+        }
+
+        .class-btn.completed {
+            background-color: var(--completed-color) !important;
+        }
+
+        .date-text {
+            font-size: 0.75em;
+            font-weight: normal;
+            margin-top: 4px;
+            opacity: 0.9;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 320px;
+            text-align: center;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+
+        .btn-action {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-confirm { background: #2E7D32; color: white; }
+        .btn-delete { background: #C62828; color: white; }
+        .btn-close { background: #CFD8DC; color: #37474F; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Panel Resumen -->
+    <div class="summary-card">
+        <div class="summary-title">RESUMEN DE PROGRESO TEÓRICO (OBJETIVO: 30 HORAS)</div>
+        <div class="metrics-grid">
+            <div class="metric-box metric-teoria" id="metric-teoria">Teoría: 0 / 26 hrs</div>
+            <div class="metric-box metric-taller" id="metric-taller">Talleres: 0 / 4 hrs</div>
+            <div class="metric-box metric-faltantes" id="metric-faltantes">Faltan: 30 hrs</div>
+        </div>
+    </div>
+
+    <!-- Malla de Clases -->
+    <div class="categories-grid" id="main-grid"></div>
+</div>
+
+<!-- Modal Fecha -->
+<div class="modal" id="date-modal">
+    <div class="modal-content">
+        <h3 id="modal-title" style="margin-top:0;">Registrar Asistencia</h3>
+        <p style="font-size: 0.9em; color: #546E7A;">Selecciona la fecha:</p>
+        <input type="date" id="date-input" style="padding: 8px; font-size: 1em; width: 80%;">
+        <div class="modal-buttons">
+            <button class="btn-action btn-confirm" onclick="confirmarAsistencia()">Guardar</button>
+            <button class="btn-action btn-close" onclick="cerrarModal()">Cancelar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle -->
+<div class="modal" id="detail-modal">
+    <div class="modal-content">
+        <h3 id="detail-title" style="margin-top:0; color: #2E7D32;">✓ Clase Completada</h3>
+        <p id="detail-date" style="font-size: 0.95em;"></p>
+        <div class="modal-buttons">
+            <button class="btn-action btn-delete" onclick="borrarAsistencia()">Borrar Asistencia</button>
+            <button class="btn-action btn-close" onclick="cerrarModalDetail()">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const CATEGORIAS = {
+    "Normas de Tránsito": {
+        color: "#1976D2", tipo: "teoria",
+        clases: ["Normas de Tránsito 1", "Normas de Tránsito 2", "Normas de Tránsito 3", "Normas de Tránsito 4", "Normas de Tránsito 5"]
+    },
+    "Movilidad Segura y Sostenible": {
+        color: "#388E3C", tipo: "teoria",
+        clases: ["Movilidad Segura y Sostenible 1", "Movilidad Segura y Sostenible 2", "Movilidad Segura y Sostenible 3", "Movilidad Segura y Sostenible 4"]
+    },
+    "Señalización e Infraestructura": {
+        color: "#F57C00", tipo: "teoria",
+        clases: ["Señalización e Infraestructura Vial 1", "Señalización e Infraestructura Vial 2", "Señalización e Infraestructura Vial 3", "Señalización e Infraestructura Vial 4"]
+    },
+    "Saberes Esenciales": {
+        color: "#7B1FA2", tipo: "teoria",
+        clases: ["Saberes Esenciales 1", "Saberes Esenciales 2", "Saberes Esenciales 3", "Saberes Esenciales 4"]
+    },
+    "Talleres Prácticos": {
+        color: "#D32F2F", tipo: "taller",
+        clases: ["Taller 1", "Taller 2", "Taller 3", "Taller 4"]
+    }
+};
+
+const INITIAL_DATA = {
+    "Movilidad Segura y Sostenible 2": "2026-09-29",
+    "Señalización e Infraestructura Vial 3": "2026-09-29",
+    "Taller 3": "2026-09-28",
+    "Saberes Esenciales 3": "2026-09-28"
+};
+
+let asistencias = JSON.parse(localStorage.getItem('asistencias_conduccion')) || INITIAL_DATA;
+let selectedClass = null;
+
+function renderUI() {
+    const mainGrid = document.getElementById('main-grid');
+    mainGrid.innerHTML = '';
+
+    let horasTeoria = 0;
+    let horasTaller = 0;
+
+    Object.entries(CATEGORIAS).forEach(([catName, catInfo]) => {
+        const isTaller = catInfo.tipo === 'taller';
+        const card = document.createElement('div');
+        card.className = `category-card ${isTaller ? 'talleres-section' : ''}`;
+        card.style.borderColor = catInfo.color;
+
+        const title = document.createElement('div');
+        title.className = 'category-title';
+        title.style.color = catInfo.color;
+        title.innerText = catName;
+        card.appendChild(title);
+
+        const btnGrid = document.createElement('div');
+        btnGrid.className = isTaller ? 'talleres-grid' : 'buttons-grid';
+
+        catInfo.clases.forEach(clase => {
+            const btn = document.createElement('button');
+            btn.className = 'class-btn';
+            
+            const isCompleted = !!asistencias[clase];
+            if (isCompleted) {
+                btn.classList.add('completed');
+                btn.innerHTML = `✓ ${clase}<div class="date-text">(${asistencias[clase]})</div>`;
+                if (isTaller) horasTaller += 2; else horasTeoria += 2;
+            } else {
+                btn.style.backgroundColor = catInfo.color;
+                btn.innerText = clase;
+            }
+
+            btn.onclick = () => handleClassClick(clase);
+            btnGrid.appendChild(btn);
+        });
+
+        card.appendChild(btnGrid);
+        mainGrid.appendChild(card);
+    });
+
+    // Actualizar Resumen
+    document.getElementById('metric-teoria').innerText = `Teoría: ${horasTeoria} / 26 hrs`;
+    document.getElementById('metric-taller').innerText = `Talleres: ${horasTaller} / 4 hrs`;
+    const total = horasTeoria + horasTaller;
+    const faltantes = Math.max(0, 30 - total);
+    document.getElementById('metric-faltantes').innerText = faltantes > 0 ? `Faltan: ${faltantes} hrs` : '¡30 hrs Completadas!';
+
+    localStorage.setItem('asistencias_conduccion', JSON.stringify(asistencias));
+}
+
+function handleClassClick(clase) {
+    selectedClass = clase;
+    if (asistencias[clase]) {
+        document.getElementById('detail-title').innerText = `✓ ${clase}`;
+        document.getElementById('detail-date').innerText = `Asististe el día: ${asistencias[clase]}`;
+        document.getElementById('detail-modal').style.display = 'flex';
+    } else {
+        document.getElementById('modal-title').innerText = `Asistencia: ${clase}`;
+        document.getElementById('date-input').value = new Date().toISOString().split('T')[0];
+        document.getElementById('date-modal').style.display = 'flex';
+    }
+}
+
+function confirmarAsistencia() {
+    const fecha = document.getElementById('date-input').value;
+    if (fecha) {
+        asistencias[selectedClass] = fecha;
+        cerrarModal();
+        renderUI();
+    }
+}
+
+function borrarAsistencia() {
+    delete asistencias[selectedClass];
+    cerrarModalDetail();
+    renderUI();
+}
+
+function cerrarModal() { document.getElementById('date-modal').style.display = 'none'; }
+function cerrarModalDetail() { document.getElementById('detail-modal').style.display = 'none'; }
+
+renderUI();
+</script>
+</body>
+</html>
